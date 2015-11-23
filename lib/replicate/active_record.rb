@@ -135,10 +135,14 @@ module Replicate
             (replicant_id = info[:replicant_id]) &&
             dumper.dumped?(replicant_id)
 
+          # Avoid dead loops
+          dumper.dumping(replicant_id)
+
           next if (dependent = __send__(reflection.name)).nil?
 
           case dependent
           when ActiveRecord::Base, Array
+
             dumper.dump(dependent)
 
             # clear reference to allow GC

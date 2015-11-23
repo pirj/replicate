@@ -83,6 +83,7 @@ module Replicate
         if object.respond_to?(:dump_replicant)
           args = [self]
           args << opts unless object.method(:dump_replicant).arity == 1
+
           object.dump_replicant(*args)
         else
           raise NoMethodError, "#{object.class} must respond to #dump_replicant"
@@ -100,6 +101,18 @@ module Replicate
         return false
       end
       @memo[type.to_s][id]
+    end
+
+    # Mark as currently dumping to avoid dead loops
+    def dumping(object)
+      if object.respond_to?(:replicant_id)
+        type, id = object.replicant_id
+      elsif object.is_a?(Array)
+        type, id = object
+      else
+        return false
+      end
+      @memo[type][id] = :dumping
     end
 
     # Called exactly once per unique type and id. Emits to all listeners.
